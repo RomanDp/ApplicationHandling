@@ -1,0 +1,64 @@
+# Learn more about services, parameters and containers at
+# http://symfony.com/doc/current/service_container.html
+parameters:
+    #parameter_name: value
+
+services:
+    #service_name:
+    #    class: AppBundle\Directory\ClassName
+    #    arguments: ['@another_service_name', 'plain_value', '%parameter_name%']
+
+
+    app.companies:
+        class: AppBundle\Service\Companies
+        arguments: ["@doctrine", "@fos_user.user_manager"]
+
+    app.persons:
+        class: AppBundle\Service\Persons
+        arguments: ["@fos_user.util.token_generator", "@fos_user.user_manager", "@app.mailer", '%from_email%']
+
+    app.participants:
+        class: AppBundle\Service\Participants
+        arguments: ["@doctrine", "@brouzie_mailer"]
+
+    app.participants_companies:
+        class: AppBundle\Service\ParticipantsCompanies
+        arguments: ["@doctrine.orm.default_entity_manager"]
+
+    app.form_application_handling.handling_application_form_flow:
+        class: AppBundle\Form\ApplicationHandling\HandlingApplicationFormFlow
+        parent: craue.form.flow
+
+    app.form_application_handling.application_company_type:
+        class: AppBundle\Form\ApplicationHandling\ApplicationCompanyType
+        arguments: ['@doctrine', '@router']
+        tags:
+            - { name: form.type, alias: AppBundle\Form\ApplicationCompanyForm }
+
+    app.form_application_handling.application_participant_type:
+        class: AppBundle\Form\ApplicationHandling\ApplicationParticipantType
+        arguments: ['@doctrine', '@router', '@app.participants']
+        tags:
+            - { name: form.type, alias: AppBundle\Form\ApplicationHandling\ApplicationParticipantType }
+
+    app.mailer:
+        class: AppBundle\Service\Mailer
+        arguments: ["@mailer", "@twig", "%mailer_from%"]
+
+
+    app.service.user_mailer:
+        class: AppBundle\Service\UserMailer
+        arguments: ['@app.mailer', '%from_email%']
+
+    validator.users.email_available:
+        class: AppBundle\Validator\Constraints\IsUniqueEmailValidator
+        arguments: ['@doctrine.orm.default_entity_manager']
+        tags:
+
+        - { name: validator.constraint_validator, alias: useremail_validator }
+
+    app.twig.normalize_user_input_data_extension:
+        class: AppBundle\Twig\Extension\NormalizeUserInputDataExtension
+        arguments: ['%country_phone_codes%']
+        tags:
+            - { name: twig.extension }

@@ -1,0 +1,29 @@
+{% extends 'email_base_layout.html.twig' %}
+
+{% block subject %}Участие в {{ application.conference.getName(person.locale) }}{% endblock %}
+
+{% block body_text -%}
+    Здравствуйте {{ person.getFullName(person.locale) }}
+    {% if isApprovedPerson %}
+        Просмотреть программу {{ url('schedule', {'id' : application.conference.id}) }} .
+    {% else %}
+        Завершить регистрацию для просмотра программы {{ url('fos_user_resetting_reset', {
+        '_locale': person.locale,
+        'token': person.confirmationToken
+    }) }} .
+    {% endif %}
+{%- endblock %}
+
+{% block text_part_body %}
+    <p style="font-size: 12;">
+        Здравствуйте {{ person.getFullName(person.locale) }}. <br/><br/>
+        {% if isApprovedPerson %}
+            <a href="{{ url('schedule', {'id' :  application.conference.id}) }}">Просмотреть программу</a>
+        {% else %}
+            <a href="{{ url('fos_user_resetting_reset', {
+                '_locale': person.locale,
+                'token': person.confirmationToken
+            }) }}">Завершить регистрацию для просмотра программы</a>
+        {% endif %}
+    </p>
+{% endblock %}

@@ -1,0 +1,6 @@
+manager:
+    resource: '@AppBundle/Controller/Manager'
+    type: annotation
+    prefix: /manager
+
+

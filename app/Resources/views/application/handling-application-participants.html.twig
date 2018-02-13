@@ -1,0 +1,65 @@
+{% extends 'application/handling-application-company.html.twig' %}
+
+{% import _self as mc %}
+
+{% macro participant_form_row(participant, person, field) %}
+    <tr>
+        <td>{{ form_label(person[field], null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+        {% set string = attribute(participant, field) %}
+        <td data-normalized-string="{{ string|normalize_user_input_data(field) }}">{{ string }}</td>
+        <td>
+            <button class="btn btn-default js-set-value-from-td"><i class="fa fa-arrow-right"></i></button>
+        </td>
+        <td>
+            {{ form_widget(person[field]) }}
+            {{ form_errors(person[field]) }}
+        </td>
+    </tr>
+{% endmacro %}
+
+{% block table %}
+    {% for index, participantRow in form.targetParticipants %}
+        {% set applicationParticipant = application.applicationParticipants[index] %}
+        {% set currentPerson = participantRow.targetPerson %}
+        <table class="table table-stripped js-load-entity-data-target"
+               data-bind-pattern-prefix="{{ participantRow.targetPerson.vars.full_name }}"
+        >
+            <tr>
+                <td>{{ form_label(participantRow.person, null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+                <td colspan="3">
+                    {{ form_widget(participantRow.person, {'attr': {'class': 'js-load-entity-data'}}) }}
+                    <span class="js-spiinner hidden fa fa-spinner fa-spin"></span>
+                    {{ form_errors(participantRow.person) }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>{{ form_label(participantRow.participationType, null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+                <td colspan="2">
+                    {{ form_widget(participantRow.participationType) }}
+                    {{ form_errors(participantRow.participationType) }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>{{ form_label(participantRow.crmId, null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+                <td colspan="2">
+                    {{ form_widget(participantRow.crmId) }}
+                    {{ form_errors(participantRow.crmId) }}
+                </td>
+            </tr>
+
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'firstNameRu') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'lastNameRu') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'firstNameEn') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'lastNameEn') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'firstNameUk') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'lastNameUk') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'positionRu') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'positionEn') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'positionUk') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'email') }}
+            {{ mc.participant_form_row(applicationParticipant, currentPerson, 'phone') }}
+        </table>
+    {% endfor %}
+{% endblock table %}

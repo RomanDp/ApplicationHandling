@@ -1,0 +1,138 @@
+{% extends 'base.html.twig' %}
+{% import _self as forms %}
+
+{% block title %}Тест{% endblock %}
+
+{% set page_title = 'Обработка заявки' %}
+
+{% block page_header %}
+    {{ page_title }}
+{% endblock %}
+
+{% form_theme form 'bootstrap_3_horizontal_layout.html.twig' %}
+
+{% macro application_form_row(form, application, field) %}
+    <tr>
+        <td>{{ form_label(form.targetCompany[field], null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+        {% set string = attribute(application, field) %}
+        <td data-normalized-string="{{ string|normalize_user_input_data(field) }}">{{ string }}</td>
+        <td>
+            <button class="btn btn-default js-set-value-from-td"><i class="fa fa-arrow-right"></i></button>
+        </td>
+        <td>
+            {{ form_widget(form.targetCompany[field]) }}
+            {{ form_errors(form.targetCompany[field]) }}
+        </td>
+    </tr>
+{% endmacro %}
+
+{% block body %}
+    <div class="box">
+        {{ form_start(form, {
+            'attr': {
+                'novalidate': 'novalidate',
+            }
+        }) }}
+        {{ form_errors(form) }}
+
+        {% block table %}
+            <table class="table table-stripped js-load-entity-data-target" data-bind-pattern-prefix="{{ form.targetCompany.vars.full_name }}">
+                <tr>
+                    <th>Заявка</th>
+                    <th>{{ form_label(form.company) }}</th>
+                    <th colspan="2">
+                        {{ form_widget(form.company, {'attr': {'class': 'js-load-entity-data'}}) }}
+                        <span class="hidden js-spiinner fa fa-spinner fa-spin"></span>
+                        {{ form_errors(form.company) }}
+                    </th>
+                </tr>
+
+                <tr>
+                    <td colspan="2">{{ form_label(form.currencyName, null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+                    <td>
+                        {{ form_widget(form.currencyName) }}
+                    </td>
+                </tr>
+
+                {{ forms.application_form_row(form, application, 'nameRu') }}
+                {{ forms.application_form_row(form, application, 'nameEn') }}
+                {{ forms.application_form_row(form, application, 'nameUk') }}
+                {{ forms.application_form_row(form, application, 'crmId') }}
+                {{ forms.application_form_row(form, application, 'director') }}
+                {{ forms.application_form_row(form, application, 'activitiesRu') }}
+                {{ forms.application_form_row(form, application, 'activitiesEn') }}
+                {{ forms.application_form_row(form, application, 'activitiesUk') }}
+                {{ forms.application_form_row(form, application, 'phone') }}
+                {{ forms.application_form_row(form, application, 'email') }}
+                {{ forms.application_form_row(form, application, 'legalCompanyName') }}
+                {{ forms.application_form_row(form, application, 'country') }}
+                {{ forms.application_form_row(form, application, 'legalAddress') }}
+                {{ forms.application_form_row(form, application, 'mailAddress') }}
+                {{ forms.application_form_row(form, application, 'legalId') }}
+                {{ forms.application_form_row(form, application, 'taxId') }}
+                {{ forms.application_form_row(form, application, 'contact') }}
+
+                <tr>
+                    <td>{{ form_label(form.targetApplicationParticipationType, null, {'label_attr': {'style': 'width: 100%'}}) }}</td>
+                    <td>
+                        {{ form_widget(form.targetApplicationParticipationType) }}
+                        {{ form_errors(form.targetApplicationParticipationType) }}
+                    </td>
+                </tr>
+
+            </table>
+        {% endblock table %}
+
+        <div class="box-footer">
+            {#<button type="submit" class="btn btn-primary pull-right">Далее <i class="fa fa-arrow-circle-right"></i>#}
+            {#</button>#}
+
+            {% include '@CraueFormFlow/FormFlow/buttons.html.twig' with {
+            craue_formflow_button_class_next: 'btn btn-primary pull-right',
+            craue_formflow_button_class_finish: 'btn btn-primary pull-right',
+            craue_formflow_button_class_back: 'btn',
+            craue_formflow_button_class_reset: 'btn btn-warning',
+            } %}
+        </div>
+        {{ form_end(form) }}
+    </div>
+{% endblock body %}
+
+{% block javascripts %}
+    <script>
+        jQuery(document).ready(function ($) {
+            $('.js-load-entity-data').on('change', function (e) {
+                $el = $(e.currentTarget);
+                var $form = $el.closest('.js-load-entity-data-target');
+
+                var $selectedCompany = $el.find('option:selected');
+                var loadUrl = $selectedCompany.data('load-url');
+
+                if (loadUrl) {
+                    var $spinner = $form.find('.js-spiinner').removeClass('hidden');
+
+                    $.ajax({
+                        url: loadUrl,
+                        success: function (data) {
+                            bindDataToForm($form, data, '[name="'+$form.data('bind-pattern-prefix')+'[%field%]"]');
+                            $spinner.addClass('hidden');
+                        }
+                    });
+                } else {
+                    $form.find('.js-set-value-from-td').trigger('click');
+                }
+            });
+
+            $('.js-set-value-from-td').on('click', function(e) {
+                e.preventDefault();
+
+                var $td = $(e.currentTarget).closest('td');
+                var $input = $td.next().find(':input');
+                $input.val($td.prev().data('normalized-string'));
+            })
+
+        });
+    </script>
+{% endblock javascripts %}
+
+

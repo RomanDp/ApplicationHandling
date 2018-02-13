@@ -1,0 +1,156 @@
+{% extends "empty-base.html.twig" %}
+
+{% block body_class %}hold-transition skin-green sidebar-mini{% endblock %}
+
+{% block content %}
+    <!-- Main Header -->
+    <header class="main-header">
+        {% block homepage_url %}
+            <!-- Logo -->
+            <a href="{{ path('homepage') }}" class="logo">
+                <!-- mini logo for sidebar mini 50x50 pixels -->
+                <span class="logo-mini"><img src="{{ asset('assets/img/logo2-ru.png') }}"></span>
+                <!-- logo for regular state and mobile devices -->
+                <span class="logo-lg"><img src="{{ asset('assets/img/logo2wide-ru.png') }}"></span>
+            </a>
+        {% endblock %}
+        <!-- Header Navbar -->
+        <nav class="navbar navbar-static-top" role="navigation">
+            <!-- Sidebar toggle button-->
+            <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                <span class="sr-only">Toggle navigation</span>
+            </a>
+            <!-- Navbar Right Menu -->
+            <div class="navbar-custom-menu">
+                <ul class="nav navbar-nav">
+                    {% if is_granted('ROLE_MANAGER') %}
+                        {% block synchronize_participants %}
+                            {% if app.request.attributes.get('conference') %}
+                                {{ render(controller('AppBundle:Manager/Default:showParticipantsSyncButton')) }}
+                            {% endif %}
+                        {% endblock %}
+                    {% endif %}
+                    {% if is_granted('ROLE_USER') %}
+                        {{ render(controller('AppBundle:Frontend/Notifications:showUserNotificationsWidget')) }}
+                        <li class="dropdown user user-menu">
+                            <!-- Menu Toggle Button -->
+                            {% set locale = app.user.locale %}
+                            {% set userName = app.user.getFullName(locale) %}
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="hidden-xs">{{ userName }}</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- The user image in the menu -->
+                                <li class="user-header">
+                                    <p>
+                                        {{ userName }}
+                                        <small>{{ app.user.getPosition(locale) }}</small>
+                                    </p>
+                                </li>
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+                                        <a href="{{ path('profile_edit') }}" class="btn btn-default btn-flat">{{ 'label.profile'|trans }}</a>
+                                    </div>
+                                    {#<div class="pull-right">#}
+                                        {#<a href="{{ path('logout') }}" class="btn btn-default btn-flat">Выход</a>#}
+                                    {#</div>#}
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ 'label.lang.choice'|trans }}<span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="{{ path('profile_change_locale', {'userLocale' : 'ru'}) }}">{{ 'label.lang.ru'|trans }}</a></li>
+                                <li><a href="{{ path('profile_change_locale', {'userLocale' : 'uk'}) }}">{{ 'label.lang.uk'|trans }}</a></li>
+                                <li><a href="{{ path('profile_change_locale', {'userLocale' : 'en'}) }}">{{ 'label.lang.en'|trans }}</a></li>
+                            </ul>
+                        </li>
+                        {% if app.request.attributes.get('conference') %}
+                            {{ render(controller('AppBundle:Manager/Default:showParticipantsSyncButton')) }}
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+    </header>
+    {% block main_sidebar %}
+        <!-- Left side column. contains the logo and sidebar -->
+        <aside class="main-sidebar">
+            <section class="sidebar">
+                {{ knp_menu_render('manager') }}
+            </section>
+        </aside>
+    {% endblock main_sidebar %}
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <h1>
+                {% block page_header %}
+                    Page Header
+                    <small>Optional description</small>
+                {% endblock %}
+            </h1>
+        </section>
+        <!-- Main content -->
+        <section class="content">
+			{% for flash_message in app.session.flashBag.get('notice') %}
+                <div class="panel panel-default">
+                    <div class="panel-body bg-success">
+						{{ flash_message }}
+                    </div>
+                </div>
+			{% endfor %}
+			{% for flash_message in app.session.flashBag.get('error') %}
+                <div class="panel panel-default">
+                    <div class="panel-body bg-danger">
+						{{ flash_message }}
+                    </div>
+                </div>
+			{% endfor %}
+
+            {% block body %}{% endblock %}
+
+        </section>
+        <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript">
+        $('body').on('click', '.js-participants-sync', function (e) {
+            e.preventDefault();
+            var $el = $(e.currentTarget);
+
+            if ($el.prop('disabled')) {
+                return;
+            }
+
+            var $buttonSpinner = $el.children('i');
+            $el.prop('disabled', true);
+            $buttonSpinner.addClass('fa-spin');
+
+            $.ajax({
+                url: $el.data('url'),
+                success: function (data) {
+                    if (data.success) {
+                        $buttonSpinner.removeClass('fa-spin');
+                        $buttonSpinner.removeClass('fa-refresh');
+                        $buttonSpinner.addClass('fa-check');
+                        //работает только на той странице, где нажата была
+                        setTimeout(function () {
+                            $buttonSpinner.removeClass('fa-check');
+                            $el.prop('disabled', false);
+                            $buttonSpinner.addClass('fa-refresh');
+                        }, 60000);
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
